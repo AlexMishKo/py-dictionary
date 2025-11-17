@@ -81,7 +81,6 @@ class Dictionary:
         try:
             value = self[key]
             del self[key]
-            self.keys_in_order.remove(key)
             return value
         except KeyError:
             if default is not _sentinel:
