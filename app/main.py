@@ -17,6 +17,7 @@ class Dictionary:
             = [[] for _ in range(self.capacity)]
         self.size: int = 0
         self.resize_threshold: float = 2 / 3
+        self.keys_in_order: list[Any] = []
 
     def __setitem__(self, key: Any, value: Any) -> None:
         if (self.size + 1) / self.capacity >= self.resize_threshold:
@@ -40,6 +41,7 @@ class Dictionary:
 
         bucket.append(Dictionary.Node(key, hash_key, value))
         self.size += 1
+        self.keys_in_order.append(key)
 
     def __getitem__(self, key: Any) -> Any:
         hash_key = hash(key)
@@ -55,6 +57,7 @@ class Dictionary:
     def clear(self) -> None:
         self.table = [[] for _ in range(self.capacity)]
         self.size = 0
+        self.keys_in_order.clear()
 
     def __delitem__(self, key: Any) -> None:
         hash_key = hash(key)
@@ -64,36 +67,32 @@ class Dictionary:
             if node.key == key:
                 bucket.remove(node)
                 self.size -= 1
+                self.keys_in_order.remove(key)
                 return
         raise KeyError(key)
 
     def get(self, key: Any, default: Any = None) -> Any:
-        hash_key = hash(key)
-        index = hash_key % self.capacity
-        for node in self.table[index]:
-            if node.key == key:
-                return node.value
-        return default
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def pop(self, key: Any, default: Any = _sentinel) -> Any:
-        hash_key = hash(key)
-        index = hash_key % self.capacity
-        bucket = self.table[index]
-        for node in bucket:
-            if node.key == key:
-                bucket.remove(node)
-                self.size -= 1
-                return node.value
-        if default is not _sentinel:
-            return default
-        else:
-            raise KeyError(key)
+        try:
+            value = self[key]
+            del self[key]
+            self.keys_in_order.remove(key)
+            return value
+        except KeyError:
+            if default is not _sentinel:
+                return default
+            else:
+                raise KeyError(key)
 
     def update(self, other_dict: dict) -> None:
         for key, value in other_dict.items():
             self[key] = value
 
     def __iter__(self) -> Any:
-        for bucket in self.table:
-            for node in bucket:
-                yield node.key
+        for key in self.keys_in_order:
+            yield key
