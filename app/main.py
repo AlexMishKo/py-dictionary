@@ -1,5 +1,7 @@
 from typing import Any
 
+_sentinel = object()
+
 
 class Dictionary:
 
@@ -73,7 +75,7 @@ class Dictionary:
                 return node.value
         return default
 
-    def pop(self, key: Any, default: Any = None) -> Any:
+    def pop(self, key: Any, default: Any = _sentinel) -> Any:
         hash_key = hash(key)
         index = hash_key % self.capacity
         bucket = self.table[index]
@@ -82,7 +84,7 @@ class Dictionary:
                 bucket.remove(node)
                 self.size -= 1
                 return node.value
-        if default is not None:
+        if default is not _sentinel:
             return default
         else:
             raise KeyError(key)
